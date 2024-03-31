@@ -10,10 +10,18 @@ abstract interface class DictionaryService {
   DictionaryInfo get dictionaryInfo;
 
   /// Filters words in the dictionary by the given [prefix].
-  /// 
+  ///
   /// A success response containing a list of [Word]s filtered by the prefix.
   FutureOr<Response<List<Word>>> filterBy(String prefix);
 
   /// Saves a list of [words] to the dictionary.
-  FutureOr<Response<void>> saveWords(List<Word> words);
+  ///
+  /// If there are words rejected, they are returned in a list.
+  FutureOr<Response<List<Word>>> saveWords(List<Word> words);
+}
+
+extension WordListHelper on List<Word> {
+  String asString() {
+    return map((word) => word.text).join(' ');
+  }
 }

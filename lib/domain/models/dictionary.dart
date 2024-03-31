@@ -17,6 +17,7 @@ class Dictionary extends DictionaryInfo {
     required super.value,
     required super.alphabet,
     required super.joker,
+    required super.maxWordLength,
     required this.storage,
   });
 
@@ -24,8 +25,9 @@ class Dictionary extends DictionaryInfo {
   /// and with the english alphabet.
   ///
   /// [storage] The storage used for word operations.
-  Dictionary.english(this.storage)
-      : super(value: 0, joker: '*', alphabet: const [
+  Dictionary.english(this.storage, {int? maxWordLength})
+      : super(value: 0, joker: '*', maxWordLength: maxWordLength ?? 45, alphabet:
+       const [
           'a',
           'b',
           'c',

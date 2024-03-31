@@ -10,17 +10,28 @@ abstract class DictionaryInfo {
   /// The symbol representing any character in the words of the dictionary.
   final String joker;
 
+  /// The maximum length of a word to be stored.
+  final int maxWordLength;
+
   /// Constructs a [DictionaryInfo] instance with the given parameters.
   DictionaryInfo({
     required this.value,
     required this.alphabet,
     required this.joker,
+    required this.maxWordLength,
   })  : assert(joker.length == 1, 'The joker must be a single character'),
         assert(alphabet.isNotEmpty, 'The alphabet must not be empty.'),
         assert(() {
           for (var letter in alphabet) {
-            if (letter.isEmpty) return false;
+            if (letter.length != 1) return false;
           }
           return true;
-        }(), 'The alphabet must not contain empty letters.');
+        }(), 'An alphabet letter must be a single character.');
+}
+
+/// Helper methods for handling Dictionary alphabets.
+extension DictionaryAlphabetHelper on List<String> {
+  Iterable<int> asRunes() {
+    return map((letter) => letter.runes.first);
+  }
 }

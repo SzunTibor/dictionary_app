@@ -19,8 +19,8 @@ class Response<T> {
   /// A message describing the response.
   final String message;
 
-  /// An optional value associated with the response.
-  final T? value;
+  /// A value associated with the response.
+  final T value;
 
   /// Constructs a [Response] instance with the given parameters.
   Response({
@@ -29,7 +29,11 @@ class Response<T> {
     required this.value,
   });
 
-  Response.error(this.message) : type = ResponseType.error, value = null;
-  Response.warning(this.message) : type = ResponseType.warning, value = null;
-  Response.success(this.value) : type = ResponseType.success, message = '';
+  Response.error(this.message, this.value)
+      : type = ResponseType.error;
+  Response.warning(this.message, this.value)
+      : type = ResponseType.warning;
+  Response.success(this.value)
+      : type = ResponseType.success,
+        message = '';
 }
