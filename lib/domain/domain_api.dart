@@ -8,4 +8,6 @@ export 'package:dictionary_app_cont/data/word_evaluator/word_evaluator.dart';
 export 'package:dictionary_app_cont/data/word_evaluator/simple_word_evaluator.dart';
 export 'package:dictionary_app_cont/data/word_storage/word_storage.dart';
 export 'package:dictionary_app_cont/data/word_storage/map_storage.dart';
+export 'package:dictionary_app_cont/domain/text_processor/text_processor.dart';
+export 'package:dictionary_app_cont/domain/text_processor/default_text_processor.dart';
 

@@ -1,12 +1,6 @@
 import 'dart:async';
 
-import '../../data/word_storage/map_storage.dart';
-import '../../data/word_storage/word_storage.dart';
-import '../models/dictionary.dart';
-import '../models/dictionary_info.dart';
-import '../models/word.dart';
-import '../response.dart';
-import 'dictionary_service.dart';
+import '../domain_api.dart';
 
 /// Default implementation of a service for interacting with a [Dictionary].
 class DefaultDictionaryService implements DictionaryService {
@@ -58,14 +52,15 @@ class DefaultDictionaryService implements DictionaryService {
     final List<Word> wordsAccepted = [];
     final List<Word> wordsRejected = [];
     for (var word in words) {
-      if (_isWordTooLong(word) || _hasWordInvalidChar(word)) {
+      if (_dictionary.isTextTooLong(word.text) ||
+          _dictionary.hasInvalidChar(word.text)) {
         wordsRejected.add(word);
       } else {
         wordsAccepted.add(word);
       }
     }
 
-    // Dont overwrite duplicate words
+    // Dont overwrite duplicate words.
     final List<Word> wordsToSave = [];
     try {
       await _filterOutDuplicates(wordsAccepted, wordsToSave);
@@ -76,6 +71,9 @@ class DefaultDictionaryService implements DictionaryService {
     // Save the words. Return rejected words.
     try {
       await _dictionary.storage.saveAll(wordsToSave);
+      // Update dictionary total value.
+      final int valueGained = wordsToSave.fold<int>(0, (a, c) => a + c.value);
+      _dictionary.value += valueGained;
 
       if (wordsRejected.isNotEmpty) {
         return Response(
@@ -92,17 +90,8 @@ class DefaultDictionaryService implements DictionaryService {
 
   Future<void> _filterOutDuplicates(List<Word> input, List<Word> output) async {
     for (Word word in input) {
-      final Word? found = await _dictionary.storage.lookup(word.text);
+      final Word? found = await _dictionary.lookupText(word.text);
       if (found == null || word.value > found.value) output.add(word);
     }
-  }
-
-  bool _isWordTooLong(Word word) {
-    return word.text.length > _dictionary.maxWordLength;
-  }
-
-  bool _hasWordInvalidChar(Word word) {
-    return word.text.runes
-        .any((int letter) => !_dictionary.alphabet.asRunes().contains(letter));
   }
 }

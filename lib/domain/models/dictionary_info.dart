@@ -1,7 +1,7 @@
 /// An abstract class representing information about a dictionary.
 abstract class DictionaryInfo {
   /// The total value of the words in the dictionary.
-  final int value;
+  int value;
 
   /// The alphabet used in the words of the dictionary.
   /// Characters are ordered in an alphabetical order.
@@ -15,7 +15,7 @@ abstract class DictionaryInfo {
 
   /// Constructs a [DictionaryInfo] instance with the given parameters.
   DictionaryInfo({
-    required this.value,
+    this.value = 0,
     required this.alphabet,
     required this.joker,
     required this.maxWordLength,

@@ -29,11 +29,14 @@ class Response<T> {
     required this.value,
   });
 
-  Response.error(this.message, this.value)
-      : type = ResponseType.error;
-  Response.warning(this.message, this.value)
-      : type = ResponseType.warning;
+  Response.error(this.message, this.value) : type = ResponseType.error;
+  Response.warning(this.message, this.value) : type = ResponseType.warning;
   Response.success(this.value)
       : type = ResponseType.success,
         message = '';
+
+  @override
+  String toString() {
+    return '${type.name.toUpperCase()}: $message';
+  }
 }
