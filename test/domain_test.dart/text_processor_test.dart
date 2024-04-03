@@ -41,10 +41,9 @@ void main() {
       final response = await textProcessor.processText(['existing']);
 
       // Assert
-      expect(response.type, equals(ResponseType.success));
-      expect(response.value.length, equals(1));
-      expect(response.value[0].text, equals('existing'));
-      expect(response.value[0].value, equals(0));
+      expect(response.type, equals(ResponseType.warning));
+      expect(response.value.length, equals(0));
+      expect(response.message, equals('existing'));
     });
 
     test('processText - new word', () async {
@@ -76,10 +75,9 @@ void main() {
       final response = await textProcessor.processText(['toolong']);
 
       // Assert
-      expect(response.type, equals(ResponseType.success));
-      expect(response.value.length, equals(1));
-      expect(response.value[0].text, equals('toolong'));
-      expect(response.value[0].value, equals(0));
+      expect(response.type, equals(ResponseType.warning));
+      expect(response.value.length, equals(0));
+      expect(response.message, equals('toolong'));
     });
 
     test('processText - invalid char word', () async {
@@ -94,10 +92,9 @@ void main() {
       final response = await textProcessor.processText(['invalid@char']);
 
       // Assert
-      expect(response.type, equals(ResponseType.success));
-      expect(response.value.length, equals(1));
-      expect(response.value[0].text, equals('invalid@char'));
-      expect(response.value[0].value, equals(0));
+      expect(response.type, equals(ResponseType.warning));
+      expect(response.value.length, equals(0));
+      expect(response.message, equals('invalid@char'));
     });
 
     test('processText - error in lookup', () async {

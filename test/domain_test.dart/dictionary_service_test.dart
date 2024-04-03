@@ -59,8 +59,8 @@ void main() {
         const Word(text: 'testone', value: 1),
         const Word(text: 'testtwo', value: 2)
       ];
-      when(() => mockDictionary.isTextTooLong(any())).thenAnswer((_) => false);
-      when(() => mockDictionary.hasInvalidChar(any())).thenAnswer((_) => false);
+      when(() => mockDictionary.filterOutRejected(any()))
+          .thenAnswer((_) => (accepted: words, rejected: []));
 
       // Act
       final response = await service.saveWords(words);
@@ -73,8 +73,8 @@ void main() {
     test('saveWords - word too long', () async {
       // Arrange
       final words = [const Word(text: 'exceptionallylongword', value: 1)];
-      when(() => mockDictionary.isTextTooLong(words[0].text))
-          .thenAnswer((_) => true);
+      when(() => mockDictionary.filterOutRejected(any()))
+          .thenAnswer((_) => (accepted: [], rejected: words));
 
       // Act
       final response = await service.saveWords(words);
@@ -88,10 +88,8 @@ void main() {
     test('saveWords - word with invalid characters', () async {
       // Arrange
       final words = [const Word(text: 'test@word', value: 1)];
-      when(() => mockDictionary.hasInvalidChar(words[0].text))
-          .thenAnswer((_) => true);
-      when(() => mockDictionary.isTextTooLong(words[0].text))
-          .thenAnswer((_) => false);
+      when(() => mockDictionary.filterOutRejected(any()))
+          .thenAnswer((_) => (accepted: [], rejected: words));
 
       // Act
       final response = await service.saveWords(words);
@@ -108,17 +106,19 @@ void main() {
         const Word(text: 'testone', value: 1),
         const Word(text: 'testtwo', value: 2)
       ];
-      when(() => mockWordStorage.lookup('testone'))
-          .thenAnswer((_) async => const Word(text: 'testone', value: 1));
-      when(() => mockDictionary.hasInvalidChar(any())).thenAnswer((_) => false);
-      when(() => mockDictionary.isTextTooLong(any())).thenAnswer((_) => false);
+      when(() => mockDictionary.lookupText(words.first.text))
+          .thenAnswer((_) async => words.first);
+      when(() => mockDictionary.lookupText(words[1].text))
+          .thenAnswer((_) async => null);
+      when(() => mockDictionary.filterOutRejected(any()))
+          .thenAnswer((_) => (accepted: words, rejected: []));
 
       // Act
       final response = await service.saveWords(words);
 
       // Assert
       expect(response.type, equals(ResponseType.success));
-      expect(response.value.isEmpty, equals(true));
+      expect(response.value.length, equals(0));
     });
 
     test('saveWords - error', () async {
@@ -127,8 +127,8 @@ void main() {
         const Word(text: 'test', value: 1),
         const Word(text: 'testt', value: 2)
       ];
-      when(() => mockDictionary.hasInvalidChar(any())).thenAnswer((_) => false);
-      when(() => mockDictionary.isTextTooLong(any())).thenAnswer((_) => false);
+      when(() => mockDictionary.filterOutRejected(any()))
+          .thenAnswer((_) => (accepted: words, rejected: []));
       const errorMessage = 'Error occurred while saving words';
       when(() => mockWordStorage.saveAll(words)).thenThrow(errorMessage);
 

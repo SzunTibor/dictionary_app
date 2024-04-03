@@ -8,7 +8,6 @@ void main() {
     late WordStorage wordStorage;
 
     setUp(() {
-      // Initialize a new wordStorage instance.
       wordStorage = MapWordStorage();
     });
 

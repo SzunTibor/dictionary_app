@@ -39,4 +39,8 @@ class Response<T> {
   String toString() {
     return '${type.name.toUpperCase()}: $message';
   }
+
+  bool get isSucces => type == ResponseType.success;
+  bool get isWarning => type == ResponseType.warning;
+  bool get isError => type == ResponseType.error;
 }

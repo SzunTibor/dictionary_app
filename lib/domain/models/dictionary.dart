@@ -27,35 +27,38 @@ class Dictionary extends DictionaryInfo {
   ///
   /// [storage] The storage used for word operations.
   Dictionary.english(this.storage, {int? maxWordLength})
-      : super(value: 0, joker: '*', maxWordLength: maxWordLength ?? 45, alphabet:
-       const [
-          'a',
-          'b',
-          'c',
-          'd',
-          'e',
-          'f',
-          'g',
-          'h',
-          'i',
-          'j',
-          'k',
-          'l',
-          'm',
-          'n',
-          'o',
-          'p',
-          'q',
-          'r',
-          's',
-          't',
-          'u',
-          'v',
-          'w',
-          'x',
-          'y',
-          'z'
-        ]);
+      : super(
+            value: 0,
+            joker: '*',
+            maxWordLength: maxWordLength ?? 45,
+            alphabet: const [
+              'a',
+              'b',
+              'c',
+              'd',
+              'e',
+              'f',
+              'g',
+              'h',
+              'i',
+              'j',
+              'k',
+              'l',
+              'm',
+              'n',
+              'o',
+              'p',
+              'q',
+              'r',
+              's',
+              't',
+              'u',
+              'v',
+              'w',
+              'x',
+              'y',
+              'z'
+            ]);
 
   Future<Word?> lookupText(String text) async {
     final Word? found = await storage.lookup(text);
@@ -70,7 +73,24 @@ class Dictionary extends DictionaryInfo {
   /// Checks if the provided [text] contains any characters not included in the
   /// [Dictionary]'s alphabet.
   bool hasInvalidChar(String text) {
-    return text.runes
-        .any((int letter) => !alphabet.asRunes().contains(letter));
+    return text.runes.any((int letter) => !alphabet.asRunes().contains(letter));
+  }
+
+  /// Takes an [input] list of [Word]s and sorts it to [accepted] and [rejected]
+  /// based on the [Dictionary]'s allowed word length and alphabet.
+  ({List<Word> accepted, List<Word> rejected}) filterOutRejected(
+      List<Word> input) {
+    final List<Word> accepted = [];
+    final List<Word> rejected = [];
+
+    for (var word in input) {
+      if (isTextTooLong(word.text) || hasInvalidChar(word.text)) {
+        rejected.add(word);
+      } else {
+        accepted.add(word);
+      }
+    }
+
+    return (accepted: accepted, rejected: rejected);
   }
 }

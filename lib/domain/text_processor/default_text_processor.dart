@@ -20,30 +20,33 @@ class DefaultTextProcessor implements TextProcessor {
   ///
   /// For each text item, checks if it is already stored in the [Dictionary].
   /// If not stored, evaluates the text item using a [WordEvaluator].
-  /// Returns a [Response] containing a list of evaluated [Word]s.
+  /// Returns a [Response] containing a list of accepted and evaluated [Word]s.
+  /// Text rejected is returen in [Response.message] separated by a space.
   @override
   FutureOr<Response<List<Word>>> processText(List<String> text) async {
-    final List<Word> result = [];
+    final List<Word> wordsAccepted = [];
+    final List<Word> wordsRejected = [];
 
     for (var candidate in text) {
       int value = 1;
 
+      // Check for rejected.
+      if (_dictionary.isTextTooLong(candidate) ||
+          _dictionary.hasInvalidChar(candidate)) {
+        value = 0;
+      }
+
       // Check for duplicates.
-      try {
-        final Word? found = await _dictionary.lookupText(candidate);
-        if (found != null) value = 0;
-      } catch (error) {
-        return Response.error(error.toString(), []);
+      if (value != 0) {
+        try {
+          final Word? found = await _dictionary.lookupText(candidate);
+          if (found != null) value = 0;
+        } catch (error) {
+          return Response.error(error.toString(), []);
+        }
       }
 
-      if (_dictionary.isTextTooLong(candidate)) {
-        value = 0;
-      }
-
-      if (_dictionary.hasInvalidChar(candidate)) {
-        value = 0;
-      }
-
+      // Evaluate word.
       if (value != 0) {
         try {
           value = await _evaluator.evaluate(candidate);
@@ -52,9 +55,18 @@ class DefaultTextProcessor implements TextProcessor {
         }
       }
 
-      result.add(Word(text: candidate, value: value));
+      if (value == 0) {
+        wordsRejected.add(Word(text: candidate, value: value));
+      } else {
+        wordsAccepted.add(Word(text: candidate, value: value));
+      }
     }
 
-    return Response.success(result);
+    if (wordsRejected.isNotEmpty) {
+      return Response.warning(
+          wordsRejected.map((e) => e.text).join(' '), wordsAccepted);
+    } else {
+      return Response.success(wordsAccepted);
+    }
   }
 }

@@ -42,23 +42,19 @@ class DefaultDictionaryService implements DictionaryService {
 
   /// Saves a list of [words] to the dictionary.
   ///
-  /// If there are words rejected by the dictionary,
-  /// they are returned in a list.
-  /// Words already in the dictionary, with equal or more value than the same
-  /// word in the list will be skipped.
+  /// If there are [Word]s rejected by the [Dictionary], they are returned in a
+  /// list.
+  /// Words already in the dictionary, with equal or less value than in the
+  /// dictionary will be skipped.
+  /// Dictionary's value will be updated by the saved word's total value.
   @override
   FutureOr<Response<List<Word>>> saveWords(List<Word> words) async {
     // Filter out words rejected by the dictionary.
-    final List<Word> wordsAccepted = [];
-    final List<Word> wordsRejected = [];
-    for (var word in words) {
-      if (_dictionary.isTextTooLong(word.text) ||
-          _dictionary.hasInvalidChar(word.text)) {
-        wordsRejected.add(word);
-      } else {
-        wordsAccepted.add(word);
-      }
-    }
+    final List<Word> wordsAccepted;
+    final List<Word> wordsRejected;
+
+    (accepted: wordsAccepted, rejected: wordsRejected) =
+        _dictionary.filterOutRejected(words);
 
     // Dont overwrite duplicate words.
     final List<Word> wordsToSave = [];
