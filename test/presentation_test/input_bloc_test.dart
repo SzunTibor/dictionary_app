@@ -1,9 +1,9 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dictionary_app_cont/domain/domain_api.dart';
 import 'package:dictionary_app_cont/presentation/input/bloc/input_bloc.dart';
 import 'package:dictionary_app_cont/presentation/snackbar/SnackBarService.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:bloc_test/bloc_test.dart';
 
 class MockTextProcessor extends Mock implements TextProcessor {}
 

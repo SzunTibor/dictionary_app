@@ -19,8 +19,7 @@ void main() {
       when(() => mockDictionary.storage).thenReturn(mockWordStorage);
       when(() => mockDictionary.value).thenReturn(0);
       when(() => mockDictionary.maxWordLength).thenReturn(10);
-      when(() => mockDictionary.lookupText(any()))
-          .thenAnswer((_) => Future.value(null));
+      when(() => mockDictionary.joker).thenReturn('*');
       when(() => mockDictionary.alphabet)
           .thenReturn('abcdefghijklmnopqrstuvwxyz'.split(''));
     });
@@ -33,6 +32,8 @@ void main() {
       ];
       when(() => mockDictionary.isTextTooLong(any())).thenReturn(false);
       when(() => mockDictionary.hasInvalidChar(any())).thenReturn(false);
+      when(() => mockDictionary.lookupText(any()))
+          .thenAnswer((_) async => null);
       when(() => mockWordStorage.query(prefix))
           .thenAnswer((_) async => filteredWords);
 
@@ -67,6 +68,8 @@ void main() {
       ];
       when(() => mockDictionary.filterOutRejected(any()))
           .thenAnswer((_) => (accepted: words, rejected: []));
+      when(() => mockDictionary.lookupText(any()))
+          .thenAnswer((_) async => null);
 
       // Act
       final response = await service.saveWords(words);
@@ -166,6 +169,8 @@ void main() {
       ];
       when(() => mockDictionary.filterOutRejected(any()))
           .thenAnswer((_) => (accepted: words, rejected: []));
+      when(() => mockDictionary.lookupText(any()))
+          .thenAnswer((_) async => null);
       const errorMessage = 'Error occurred while saving words';
       when(() => mockWordStorage.saveAll(words)).thenThrow(errorMessage);
 

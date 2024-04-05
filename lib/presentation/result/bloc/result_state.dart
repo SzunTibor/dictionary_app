@@ -9,10 +9,19 @@ class InitialResultState implements ResultState {
   const InitialResultState();
 }
 
-/// A [ResultBloc] state containing a [list] of [WordPresentation]s.
-class WordsListState implements ResultState {
+/// A [ResultBloc] state containing a [list] of [Word]s.
+class WordsResultState implements ResultState {
   final List<Word> list;
 
-  /// Creates a new [WordsListState] event with a [list] of [WordPresentation]s.
-  const WordsListState({required this.list});
+  /// Creates a new [WordsResultState] state with a [list] of [Word]s.
+  const WordsResultState({required this.list});
+}
+
+/// A [ResultBloc] state representing an error state.
+class ErrorResultState implements ResultState {
+  /// The mesage desxribing the weeoe.
+  final String message;
+
+  /// Creates new [ErrorResultState] with a [message] describing the error.
+  const ErrorResultState({required this.message});
 }

@@ -25,8 +25,11 @@ class DefaultDictionaryService implements DictionaryService {
   /// Filters words in the dictionary by the given [prefix].
   ///
   /// A [Response.success] contains a list of [Word]s filtered by the prefix.
+  /// The [Dictionary.joker] represents the any prefix.
   @override
   FutureOr<Response<List<Word>>> filterBy(String prefix) async {
+    if (prefix == _dictionary.joker) prefix = '';
+
     if (_dictionary.isTextTooLong(prefix)) {
       return Response.warning(
           'The Dictionary cannot store such a long word.', []);

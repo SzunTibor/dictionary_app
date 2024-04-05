@@ -15,13 +15,17 @@ class InputBloc extends Bloc<InputEvent, InputState> {
 
   DictionaryInfo get dictionaryInfo => _dservice.dictionaryInfo;
 
-  InputBloc(this._textProcessor, this._dservice, this._snackBarService)
-      : super(const InitialInputState()) {
+  InputBloc(this._textProcessor, this._dservice, this._snackBarService,
+      {List<Word>? use})
+      : _list = use ?? [],
+        super(const InitialInputState()) {
     on<InputEvent>((event, emit) => switch (event) {
           SubmitWordsEvent() => _onSubmit(event, emit),
           SaveListEvent() => _onSave(event, emit),
           DeleteWordsEvent() => _onDelete(event, emit),
         });
+
+    emit(WordsInputState(words: _list));
   }
 
   Future<void> _onSubmit(
