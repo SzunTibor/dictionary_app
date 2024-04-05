@@ -19,52 +19,65 @@ class DefaultTextProcessor implements TextProcessor {
   /// Processes the provided list of text items.
   ///
   /// For each text item, checks if it is already stored in the [Dictionary].
-  /// If not stored, evaluates the text item using a [WordEvaluator].
+  /// If not stored, evaluates each text item using a [WordEvaluator].
   /// Returns a [Response] containing a list of accepted and evaluated [Word]s.
-  /// Text rejected is returen in [Response.message] separated by a space.
+  /// Duplicates are included in the list with 0 value and marked as duplicate.
+  /// If any text is rejected it is returned in [Response.message]
+  /// separated by a space with [Response.type] set to warning.
   @override
-  FutureOr<Response<List<Word>>> processText(List<String> text) async {
+  FutureOr<Response<List<Word>>> processText(Iterable<String> text) async {
     final List<Word> wordsAccepted = [];
-    final List<Word> wordsRejected = [];
+    final List<String> wordsRejected = [];
 
-    for (var candidate in text) {
-      int value = 1;
+    for (String candidate in text) {
+      int value = 0;
+      WordState state = WordState.pending;
 
       // Check for rejected.
       if (_dictionary.isTextTooLong(candidate) ||
           _dictionary.hasInvalidChar(candidate)) {
         value = 0;
+        state = WordState.rejected;
       }
 
       // Check for duplicates.
-      if (value != 0) {
+      if (state == WordState.pending) {
         try {
           final Word? found = await _dictionary.lookupText(candidate);
-          if (found != null) value = 0;
+          if (found != null) {
+            value = 0;
+            state = WordState.duplicate;
+          }
         } catch (error) {
           return Response.error(error.toString(), []);
         }
       }
 
       // Evaluate word.
-      if (value != 0) {
+      if (state == WordState.pending) {
         try {
           value = await _evaluator.evaluate(candidate);
+          state = WordState.accepted;
         } catch (error) {
           return Response.error(error.toString(), []);
         }
       }
 
-      if (value == 0) {
-        wordsRejected.add(Word(text: candidate, value: value));
-      } else {
-        wordsAccepted.add(Word(text: candidate, value: value));
+      switch (state) {
+        case WordState.accepted:
+        case WordState.duplicate:
+          wordsAccepted.add(Word(text: candidate, value: value, state: state));
+          break;
+        case WordState.rejected:
+          wordsRejected.add(candidate);
+          break;
+        case WordState.pending:
+          assert(false, 'Unresolved word candidate: $candidate');
       }
     }
 
     if (wordsRejected.isNotEmpty) {
-      return Response.warning(
-          wordsRejected.map((e) => e.text).join(' '), wordsAccepted);
+      return Response.warning(wordsRejected.join(' '), wordsAccepted);
     } else {
       return Response.success(wordsAccepted);
     }

@@ -27,9 +27,12 @@ class DefaultDictionaryService implements DictionaryService {
   /// A [Response.success] contains a list of [Word]s filtered by the prefix.
   @override
   FutureOr<Response<List<Word>>> filterBy(String prefix) async {
-    if (prefix.length > _dictionary.maxWordLength) {
+    if (_dictionary.isTextTooLong(prefix)) {
       return Response.warning(
           'The Dictionary cannot store such a long word.', []);
+    }
+    if (_dictionary.hasInvalidChar(prefix)) {
+      return Response.warning('The prefix has invalid characters.', []);
     }
 
     try {
@@ -49,6 +52,9 @@ class DefaultDictionaryService implements DictionaryService {
   /// Dictionary's value will be updated by the saved word's total value.
   @override
   FutureOr<Response<List<Word>>> saveWords(List<Word> words) async {
+    assert(!words.any((word) => word.state == WordState.pending),
+        'One or more words are still pending.');
+
     // Filter out words rejected by the dictionary.
     final List<Word> wordsAccepted;
     final List<Word> wordsRejected;

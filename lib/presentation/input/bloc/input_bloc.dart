@@ -2,17 +2,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../domain/domain_api.dart';
 import '../../snackbar/SnackBarService.dart';
-import '../../word/word_presentation.dart';
 
 part 'input_event.dart';
 part 'input_state.dart';
 
 class InputBloc extends Bloc<InputEvent, InputState> {
-  List<WordPresentation> _list = [];
+  List<Word> _list = [];
 
   final TextProcessor _textProcessor;
   final DictionaryService _dservice;
   final SnackBarService _snackBarService;
+
+  DictionaryInfo get dictionaryInfo => _dservice.dictionaryInfo;
 
   InputBloc(this._textProcessor, this._dservice, this._snackBarService)
       : super(const InitialInputState()) {
@@ -29,32 +30,37 @@ class InputBloc extends Bloc<InputEvent, InputState> {
     // Then, once we have a response from the dictionary we
     // update accordingly.
 
-    final Iterable<String> candidates =
-        event.text.replaceAll(',', '').split(RegExp(r'\s+'));
+    final String listAsString = _list.asString();
 
-    if (candidates.isEmpty) return;
+    final Iterable<String> candidates = event.text
+        .replaceAll(',', '')
+        .split(RegExp(r'\s+'))
+        .where((c) => c.isNotEmpty)
+        .where((c) => !listAsString.contains(c))
+        .toSet();
 
-    final pendingList = [
-      ...candidates.map((c) => WordPresentation(
-          text: c, value: 0, state: WordPresentationState.pending)),
-      ..._list,
+    final List<Word> pendingList = [
+      ...candidates
+          .map((c) => Word(text: c, value: 0, state: WordState.pending)),
     ];
 
-    emit(WordsInputState(words: pendingList));
+    if (pendingList.isEmpty) return;
+
+    emit(WordsInputState(words: [...pendingList, ..._list]));
 
     try {
       final Response<List<Word>> response =
-          await _textProcessor.processText(candidates.toList());
+          await _textProcessor.processText(candidates);
 
       switch (response.type) {
         case ResponseType.error:
           emit(ErrorInputState(response.message));
-          _snackBarService.showSnackBar(ErrorSnackBarRequest(
-              'An error occured during submit:\n${response.message}'));
+          _snackBarService.showSnackBar(
+              ErrorSnackBarRequest('An error occured during submit.'));
           break;
         case ResponseType.warning:
           final resolvedList = [
-            ..._evaluatedWordsToAccpeted(response.value),
+            ...response.value,
             ..._list,
           ];
           _list = resolvedList;
@@ -65,7 +71,7 @@ class InputBloc extends Bloc<InputEvent, InputState> {
           break;
         case ResponseType.success:
           final resolvedList = [
-            ..._evaluatedWordsToAccpeted(response.value),
+            ...response.value,
             ..._list,
           ];
           _list = resolvedList;
@@ -74,12 +80,25 @@ class InputBloc extends Bloc<InputEvent, InputState> {
       }
     } catch (error) {
       emit(ErrorInputState(error.toString()));
+      _snackBarService.showSnackBar(
+          ErrorSnackBarRequest('An error occured during submit.'));
     }
   }
 
   Future<void> _onSave(SaveListEvent event, Emitter<InputState> emit) async {
     try {
-      final response = await _dservice.saveWords(_list);
+      // Don't send words not accepted, keeping pending ones in the list.
+      final List<Word> wordsPending = [];
+      final List<Word> wordsToSave = [];
+      for (var word in _list) {
+        if (word.state == WordState.pending) {
+          wordsPending.add(word);
+        } else if (word.state == WordState.accepted) {
+          wordsToSave.add(word);
+        }
+      }
+
+      final response = await _dservice.saveWords(wordsToSave);
 
       switch (response.type) {
         case ResponseType.error:
@@ -89,13 +108,17 @@ class InputBloc extends Bloc<InputEvent, InputState> {
           break;
         case ResponseType.warning:
           emit(WarningInputState(message: response.message));
-          _list.clear();
+          _list
+            ..clear()
+            ..addAll(wordsPending);
           emit(WordsInputState(words: _list));
           _snackBarService.showSnackBar(WarningSnackBarRequest(
               'One or more words were rejected by the dictionary:\n${response.message}'));
           break;
         case ResponseType.success:
-          _list.clear();
+          _list
+            ..clear()
+            ..addAll(wordsPending);
           emit(WordsInputState(words: _list));
           break;
       }
@@ -110,10 +133,5 @@ class InputBloc extends Bloc<InputEvent, InputState> {
       _list.remove(word);
     }
     emit(WordsInputState(words: _list));
-  }
-
-  Iterable<WordPresentation> _evaluatedWordsToAccpeted(List<Word> words) {
-    return words.map((w) => WordPresentation(
-        text: w.text, value: w.value, state: WordPresentationState.accepted));
   }
 }

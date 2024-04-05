@@ -32,8 +32,8 @@ void main() {
       'emits WordsInputState on SubmitWordsEvent',
       build: () {
         final words = [
-          const Word(text: 'wordone', value: 1),
-          const Word(text: 'wordtwo', value: 2)
+          const Word(text: 'wordone', value: 1, state: WordState.accepted),
+          const Word(text: 'wordtwo', value: 2, state: WordState.accepted),
         ];
         when(() => mockTextProcessor.processText(any()))
             .thenAnswer((_) => Response.success(words));
@@ -75,8 +75,8 @@ void main() {
       'emits WarningInputState on SubmitWordsEvent',
       build: () {
         final words = [
-          const Word(text: 'word1', value: 1),
-          const Word(text: 'wordtwo', value: 2)
+          const Word(text: 'word1', value: 1, state: WordState.rejected),
+          const Word(text: 'wordtwo', value: 2, state: WordState.accepted),
         ];
         when(() => mockTextProcessor.processText(any()))
             .thenAnswer((_) => Response.warning(words.first.text, [words[1]]));
@@ -99,8 +99,8 @@ void main() {
       'emits WordsInputState on SaveListEvent',
       build: () {
         final words = [
-          const Word(text: 'wordone', value: 1),
-          const Word(text: 'wordtwo', value: 2)
+          const Word(text: 'wordone', value: 1, state: WordState.accepted),
+          const Word(text: 'wordtwo', value: 2, state: WordState.accepted)
         ];
         when(() => mockDictionaryService.saveWords(any()))
             .thenAnswer((_) => Response.success(words));
@@ -121,8 +121,8 @@ void main() {
       'emits WarningInputState with warning message and WordsInputState on SaveListEvent',
       build: () {
         final words = [
-          const Word(text: 'word1', value: 1),
-          const Word(text: 'wordtwo', value: 2)
+          const Word(text: 'word1', value: 1, state: WordState.rejected),
+          const Word(text: 'wordtwo', value: 2, state: WordState.accepted)
         ];
         when(() => mockDictionaryService.saveWords(any()))
             .thenAnswer((_) => Response.warning(words.first.text, [words[1]]));
@@ -141,30 +141,7 @@ void main() {
     );
 
     blocTest<InputBloc, InputState>(
-      'emits WordsInputState with warning message on SaveListEvent',
-      build: () {
-        final words = [
-          const Word(text: 'word1', value: 1),
-          const Word(text: 'wordtwo', value: 2)
-        ];
-        when(() => mockDictionaryService.saveWords(any()))
-            .thenAnswer((_) => Response.warning(words.first.text, [words[1]]));
-        return inputBloc;
-      },
-      act: (bloc) => bloc.add(const SaveListEvent()),
-      expect: () {
-        return [
-          isA<WarningInputState>(),
-          isA<WordsInputState>(),
-        ];
-      },
-      verify: (bloc) {
-        verify(() => mockDictionaryService.saveWords(any())).called(1);
-      },
-    );
-
-    blocTest<InputBloc, InputState>(
-      'emits  on SaveListEvent',
+      'emits ErrorInputState on SaveListEvent error.',
       build: () {
         when(() => mockDictionaryService.saveWords(any()))
             .thenThrow('Error message');

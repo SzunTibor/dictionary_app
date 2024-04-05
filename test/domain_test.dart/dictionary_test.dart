@@ -22,7 +22,7 @@ void main() {
 
     test('lookupText - found', () async {
       // Arrange
-      const foundWord = Word(text: 'test', value: 1);
+      const foundWord = Word(text: 'test', value: 1, state: WordState.accepted);
       when(() => mockWordStorage.lookup('test'))
           .thenAnswer((_) async => foundWord);
 
@@ -91,8 +91,8 @@ void main() {
     test('filterOutRejected - accept all', () {
       // Arrange
       final words = [
-        const Word(text: 'testone', value: 1),
-        const Word(text: 'testtwo', value: 2)
+        const Word(text: 'testone', value: 1, state: WordState.accepted),
+        const Word(text: 'testtwo', value: 2, state: WordState.accepted),
       ];
       final List<Word> accepted;
       final List<Word> rejected;
@@ -109,8 +109,8 @@ void main() {
       test('filterOutRejected - reject one', () {
       // Arrange
       final words = [
-        const Word(text: 'test1', value: 1),
-        const Word(text: 'testtwo', value: 2)
+        const Word(text: 'test1', value: 1, state: WordState.rejected),
+        const Word(text: 'testtwo', value: 2, state: WordState.accepted)
       ];
       final List<Word> accepted;
       final List<Word> rejected;

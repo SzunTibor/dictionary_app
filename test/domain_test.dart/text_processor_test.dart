@@ -32,8 +32,8 @@ void main() {
 
     test('processText - existing word', () async {
       // Arrange
-      when(() => mockDictionary.lookupText('existing'))
-          .thenAnswer((_) async => const Word(text: 'existing', value: 0));
+      when(() => mockDictionary.lookupText('existing')).thenAnswer((_) async =>
+          const Word(text: 'existing', value: 10, state: WordState.duplicate));
       when(() => mockDictionary.hasInvalidChar(any())).thenReturn(false);
       when(() => mockDictionary.isTextTooLong(any())).thenReturn(false);
 
@@ -41,9 +41,11 @@ void main() {
       final response = await textProcessor.processText(['existing']);
 
       // Assert
-      expect(response.type, equals(ResponseType.warning));
-      expect(response.value.length, equals(0));
-      expect(response.message, equals('existing'));
+      expect(response.type, equals(ResponseType.success));
+      expect(response.value.length, equals(1));
+      expect(response.value.first.value, equals(0));
+      expect(response.value.first.state, equals(WordState.duplicate));
+      expect(response.message, equals(''));
     });
 
     test('processText - new word', () async {
@@ -62,6 +64,28 @@ void main() {
       expect(response.value.length, equals(1));
       expect(response.value[0].text, equals('new'));
       expect(response.value[0].value, equals(10));
+      expect(response.value[0].state, equals(WordState.accepted));
+    });
+
+    test('processText - warning response', () async {
+      // Arrange
+      when(() => mockDictionary.lookupText('new'))
+          .thenAnswer((_) async => null);
+      when(() => mockEvaluator.evaluate('new')).thenAnswer((_) async => 10);
+      when(() => mockDictionary.hasInvalidChar('new')).thenReturn(false);
+      when(() => mockDictionary.hasInvalidChar('inv@lid')).thenReturn(true);
+      when(() => mockDictionary.isTextTooLong(any())).thenReturn(false);
+
+      // Act
+      final response = await textProcessor.processText(['inv@lid','new']);
+
+      // Assert
+      expect(response.type, equals(ResponseType.warning));
+      expect(response.message, equals('inv@lid'));
+      expect(response.value.length, equals(1));
+      expect(response.value[0].text, equals('new'));
+      expect(response.value[0].value, equals(10));
+      expect(response.value[0].state, equals(WordState.accepted));
     });
 
     test('processText - too long word', () async {

@@ -13,18 +13,19 @@ class SubmitWordsEvent implements InputEvent {
   const SubmitWordsEvent({required this.text});
 }
 
-/// An event representing a save events.
+/// An event representing a save event.
 /// 
 /// It saves all accepted words to the dictionary.
 class SaveListEvent implements InputEvent {
+  /// Creates a new save list event.
   const SaveListEvent();
 }
 
-/// And event representing a delete event.
+/// An event representing a delete event.
 /// 
 /// It contains the list of [words] to be deleted.
 class DeleteWordsEvent implements InputEvent {
-  final List<WordPresentation> words;
+  final List<Word> words;
 
   /// Creates a new delete event with [words] to be deleted.
   const DeleteWordsEvent({required this.words});

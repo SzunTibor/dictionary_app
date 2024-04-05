@@ -28,7 +28,11 @@ void main() {
     test('filterBy - success', () async {
       // Arrange
       const prefix = 'test';
-      final List<Word> filteredWords = [const Word(text: 'test', value: 1)];
+      final List<Word> filteredWords = [
+        const Word(text: 'test', value: 1, state: WordState.accepted)
+      ];
+      when(() => mockDictionary.isTextTooLong(any())).thenReturn(false);
+      when(() => mockDictionary.hasInvalidChar(any())).thenReturn(false);
       when(() => mockWordStorage.query(prefix))
           .thenAnswer((_) async => filteredWords);
 
@@ -43,6 +47,8 @@ void main() {
     test('filterBy - word too long', () async {
       // Arrange
       const prefix = 'exceptionallylongword';
+      when(() => mockDictionary.isTextTooLong(any())).thenReturn(true);
+      when(() => mockDictionary.hasInvalidChar(any())).thenReturn(false);
 
       // Act
       final response = await service.filterBy(prefix);
@@ -56,8 +62,8 @@ void main() {
     test('saveWords - success', () async {
       // Arrange
       final words = [
-        const Word(text: 'testone', value: 1),
-        const Word(text: 'testtwo', value: 2)
+        const Word(text: 'testone', value: 1, state: WordState.accepted),
+        const Word(text: 'testtwo', value: 2, state: WordState.accepted),
       ];
       when(() => mockDictionary.filterOutRejected(any()))
           .thenAnswer((_) => (accepted: words, rejected: []));
@@ -72,7 +78,10 @@ void main() {
 
     test('saveWords - word too long', () async {
       // Arrange
-      final words = [const Word(text: 'exceptionallylongword', value: 1)];
+      final words = [
+        const Word(
+            text: 'exceptionallylongword', value: 1, state: WordState.rejected)
+      ];
       when(() => mockDictionary.filterOutRejected(any()))
           .thenAnswer((_) => (accepted: [], rejected: words));
 
@@ -83,11 +92,14 @@ void main() {
       expect(response.type, equals(ResponseType.warning));
       expect(
           response.message, equals('Word(s) were rejected by the dictionary.'));
+      verifyNever(() => mockWordStorage.saveAll(words));
     });
 
     test('saveWords - word with invalid characters', () async {
       // Arrange
-      final words = [const Word(text: 'test@word', value: 1)];
+      final words = [
+        const Word(text: 'test@word', value: 1, state: WordState.rejected)
+      ];
       when(() => mockDictionary.filterOutRejected(any()))
           .thenAnswer((_) => (accepted: [], rejected: words));
 
@@ -98,13 +110,14 @@ void main() {
       expect(response.type, equals(ResponseType.warning));
       expect(
           response.message, equals('Word(s) were rejected by the dictionary.'));
+      verifyNever(() => mockWordStorage.saveAll(words));
     });
 
     test('saveWords - word duplicates', () async {
       // Arrange
       final words = [
-        const Word(text: 'testone', value: 1),
-        const Word(text: 'testtwo', value: 2)
+        const Word(text: 'testone', value: 1, state: WordState.duplicate),
+        const Word(text: 'testtwo', value: 2, state: WordState.accepted)
       ];
       when(() => mockDictionary.lookupText(words.first.text))
           .thenAnswer((_) async => words.first);
@@ -119,13 +132,37 @@ void main() {
       // Assert
       expect(response.type, equals(ResponseType.success));
       expect(response.value.length, equals(0));
+      verify(() => mockWordStorage.saveAll([words[1]])).called(1);
+    });
+
+    test('saveWords - warning - returns rejected', () async {
+      // Arrange
+      final words = [
+        const Word(text: 'test1', value: 1, state: WordState.rejected),
+        const Word(text: 'testtwo', value: 2, state: WordState.accepted)
+      ];
+      when(() => mockDictionary.lookupText(words[0].text))
+          .thenAnswer((_) async => null);
+      when(() => mockDictionary.lookupText(words[1].text))
+          .thenAnswer((_) async => null);
+      when(() => mockDictionary.filterOutRejected(any()))
+          .thenAnswer((_) => (accepted: [words[1]], rejected: [words[0]]));
+
+      // Act
+      final response = await service.saveWords(words);
+
+      // Assert
+      expect(response.type, equals(ResponseType.warning));
+      expect(response.value.length, equals(1));
+      expect(response.value.first, equals(words[0]));
+      verify(() => mockWordStorage.saveAll([words[1]])).called(1);
     });
 
     test('saveWords - error', () async {
       // Arrange
       final words = [
-        const Word(text: 'test', value: 1),
-        const Word(text: 'testt', value: 2)
+        const Word(text: 'test', value: 1, state: WordState.accepted),
+        const Word(text: 'testt', value: 2, state: WordState.accepted),
       ];
       when(() => mockDictionary.filterOutRejected(any()))
           .thenAnswer((_) => (accepted: words, rejected: []));
