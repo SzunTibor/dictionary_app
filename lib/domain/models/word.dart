@@ -17,4 +17,9 @@ class Word {
 
   /// Constructs a [Word] instance with the given [text] and [value].
   const Word({required this.text, required this.value, required this.state});
+
+  bool get isPending => state == WordState.pending;
+  bool get isRejected => state == WordState.rejected;
+  bool get isAccepted => state == WordState.accepted;
+  bool get isDuplicate => state == WordState.duplicate;
 }

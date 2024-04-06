@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../input/input_page.dart';
+import '../../result/result_page.dart';
+
 class DictionaryRouter {
   const DictionaryRouter(this._navigatorKey);
 
@@ -21,17 +24,17 @@ class DictionaryRouter {
       return null;
     }
 
-    // if (pathSegments.first == 'input') {
-    //   return MaterialPageRoute(
-    //     builder: (context) => InputPage(),
-    //   );
-    // }
+    if (pathSegments.first == 'input') {
+      return MaterialPageRoute(
+        builder: (context) => const InputPage(),
+      );
+    }
 
-    // if (pathSegments.first == 'results') {
-    //   return MaterialPageRoute(
-    //     builder: (context) => ResultsPage(),
-    //   );
-    // }
+    if (pathSegments.first == 'results') {
+      return MaterialPageRoute(
+        builder: (context) => const ResultPage(),
+      );
+    }
 
     return null;
   }

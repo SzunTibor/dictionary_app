@@ -19,19 +19,19 @@ class WordsInputState implements InputState {
 }
 
 /// A state of the [InputBloc] containing a warning [message].
-class WarningInputState implements InputState {
+class WarningInputState extends WordsInputState {
   /// The message describing the warning.
   final String message;
 
   /// Creates a new state of [InputBloc] with a warning [message.
-  const WarningInputState({required this.message});
+  const WarningInputState({required super.words, required this.message});
 }
 
 /// A state of the [InputBloc] containing an error [message].
-class ErrorInputState implements InputState {
+class ErrorInputState extends WordsInputState {
   /// The message describing the error.
   final String message;
 
   /// Creates a new state of [InputBloc] with an error [message.
-  const ErrorInputState(this.message);
+  const ErrorInputState({required super.words, required this.message});
 }

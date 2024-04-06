@@ -1,20 +1,11 @@
+import 'package:dictionary_app_cont/di/di_container.dart';
+import 'package:dictionary_app_cont/di/di_initializer.dart';
 import 'package:flutter/material.dart';
 
+import 'presentation/DictionaryApp.dart';
+
 void main() {
-  runApp(const MainApp());
-}
-
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
-    );
-  }
+  initGetIt(di);
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const DictionaryApp());
 }
