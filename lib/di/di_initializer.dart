@@ -13,8 +13,7 @@ GetIt initGetIt(GetIt getIt) => getIt
   ..registerFactory(
       () => ResultBloc(getIt<DictionaryService>(), getIt<SnackBarService>()))
   ..registerFactory(() => InputBloc(getIt<TextProcessor>(),
-      getIt<DictionaryService>(), getIt<SnackBarService>(),
-      use: getIt<List<Word>>()))
+      getIt<DictionaryService>(), getIt<SnackBarService>()))
 
   // Services
   ..registerFactory<TextProcessor>(() => DefaultTextProcessor(
@@ -27,13 +26,10 @@ GetIt initGetIt(GetIt getIt) => getIt
   ..registerLazySingleton(
       () => Dictionary.english(getIt<WordStorage>(), maxWordLength: 45))
   ..registerFactory<WordStorage>(() => MapWordStorage())
-  // Persist list being edited.
-  ..registerLazySingleton<List<Word>>(() => DIAppModule.localWordsList)
 
   // SnackBar
   ..registerLazySingleton(() => SnackBarService())
   // Nav
   ..registerLazySingleton(() => DictionaryNavigator(getIt<DictionaryRouter>()))
   ..registerFactory(() => DictionaryRouter(getIt<GlobalKey<NavigatorState>>()))
-  ..registerLazySingleton(() => DIAppModule.navKey)
-  ..registerLazySingleton(() => DIAppModule.scaffoldKey);
+  ..registerLazySingleton(() => DIAppModule.navKey);

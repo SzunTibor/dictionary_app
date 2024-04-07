@@ -7,7 +7,7 @@ part 'input_event.dart';
 part 'input_state.dart';
 
 class InputBloc extends Bloc<InputEvent, InputState> {
-  List<Word> _list;
+  List<Word> _list = [];
 
   final TextProcessor _textProcessor;
   final DictionaryService _dservice;
@@ -15,10 +15,11 @@ class InputBloc extends Bloc<InputEvent, InputState> {
 
   DictionaryInfo get dictionaryInfo => _dservice.dictionaryInfo;
 
-  InputBloc(this._textProcessor, this._dservice, this._snackBarService,
-      {List<Word>? use})
-      : _list = use ?? [],
-        super(const InitialInputState()) {
+  InputBloc(
+    this._textProcessor,
+    this._dservice,
+    this._snackBarService,
+  ) : super(const InitialInputState()) {
     on<InputEvent>((event, emit) => switch (event) {
           SubmitWordsEvent() => _onSubmit(event, emit),
           SaveListEvent() => _onSave(event, emit),
@@ -37,10 +38,11 @@ class InputBloc extends Bloc<InputEvent, InputState> {
     final String listAsString = _list.asString();
 
     final Iterable<String> candidates = event.text
-        .replaceAll(',', '')
+        .toLowerCase()
+        .replaceAll(RegExp(r'[,\.]'), ' ')
         .split(RegExp(r'\s+'))
         .where((c) => c.isNotEmpty)
-        .where((c) => !listAsString.contains(c))
+        .where((c) => !listAsString.split(' ').contains(c))
         .toSet();
 
     final List<Word> pendingList = [
@@ -89,6 +91,8 @@ class InputBloc extends Bloc<InputEvent, InputState> {
   }
 
   Future<void> _onSave(SaveListEvent event, Emitter<InputState> emit) async {
+    if (_list.isEmpty) return;
+
     try {
       // Don't send words not accepted, keeping pending ones in the list.
       final List<Word> wordsPending = [];

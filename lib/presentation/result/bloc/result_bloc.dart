@@ -28,14 +28,15 @@ class ResultBloc extends Bloc<ResultEvent, ResultState> {
       switch (result.type) {
         case ResponseType.error:
         case ResponseType.warning:
-          emit(ErrorResultState(message: result.message));
-          emit(const WordsResultState(list: []));
+          emit(ErrorResultState(message: result.message, list: []));
+          _snackBarService.showSnackBar(
+          ErrorSnackBarRequest('An error occured during filtering.'));
           break;
         case ResponseType.success:
           emit(WordsResultState(list: result.value));
       }
     } catch (error) {
-      emit(ErrorResultState(message: error.toString()));
+      emit(ErrorResultState(message: error.toString(), list: []));
       emit(const WordsResultState(list: []));
       _snackBarService.showSnackBar(
           ErrorSnackBarRequest('An error occured during filtering.'));

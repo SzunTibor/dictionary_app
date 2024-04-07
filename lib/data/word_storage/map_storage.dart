@@ -22,7 +22,7 @@ class MapWordStorage implements WordStorage {
 
   /// Queries the storage for words with the given [prefix].
   ///
-  /// Returns a list of matching [Word]s.
+  /// Returns an ascending sorted list of matching [Word]s.
   /// Returns an empty list if no words match the given prefix.
   @override
   FutureOr<List<Word>> query(String prefix) {
@@ -31,6 +31,8 @@ class MapWordStorage implements WordStorage {
     _storage.keys
         .where((key) => key.startsWith(prefix))
         .forEach((match) => result.add(_storage[match]!));
+
+    result.sort((a, b) => a.text.compareTo(b.text));
 
     return result;
   }

@@ -22,7 +22,6 @@ class _AppScaffoldState extends State<AppScaffold> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // key: di<GlobalKey<ScaffoldState>>(),
       bottomNavigationBar: NavigationBar(
         selectedIndex: screenIndex,
         destinations: navigator.destinations,
@@ -35,10 +34,15 @@ class _AppScaffoldState extends State<AppScaffold> {
       ),
       body: SnackBarManager(
         snackBarService: di<SnackBarService>(),
-        child: Navigator(
-          key: di<GlobalKey<NavigatorState>>(),
-          initialRoute: '/input',
-          onGenerateRoute: router.onGenerateRoute,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints.loose(const Size.fromWidth(769)),
+            child: Navigator(
+              key: di<GlobalKey<NavigatorState>>(),
+              initialRoute: '/input',
+              onGenerateRoute: router.onGenerateRoute,
+            ),
+          ),
         ),
       ),
     );

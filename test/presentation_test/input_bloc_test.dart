@@ -87,7 +87,6 @@ void main() {
         return [
           isA<WordsInputState>(), // Pending
           isA<WarningInputState>(), // Warning message
-          isA<WordsInputState>(), // Accepted words
         ];
       },
       verify: (bloc) {
@@ -132,7 +131,6 @@ void main() {
       expect: () {
         return [
           isA<WarningInputState>(),
-          isA<WordsInputState>(),
         ];
       },
       verify: (bloc) {

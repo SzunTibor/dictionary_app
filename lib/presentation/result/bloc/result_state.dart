@@ -18,10 +18,10 @@ class WordsResultState implements ResultState {
 }
 
 /// A [ResultBloc] state representing an error state.
-class ErrorResultState implements ResultState {
+class ErrorResultState extends WordsResultState {
   /// The mesage desxribing the weeoe.
   final String message;
 
   /// Creates new [ErrorResultState] with a [message] describing the error.
-  const ErrorResultState({required this.message});
+  const ErrorResultState({required super.list, required this.message});
 }

@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import '../../data/word_storage/word_storage.dart';
 import 'dictionary_info.dart';
 import 'word.dart';
@@ -73,7 +75,7 @@ class Dictionary extends DictionaryInfo {
   /// Checks if the provided [text] contains any characters not included in the
   /// [Dictionary]'s alphabet.
   bool hasInvalidChar(String text) {
-    return text.runes.any((int letter) => !alphabet.asRunes().contains(letter));
+    return text.characters.any((String letter) => !alphabet.contains(letter));
   }
 
   /// Takes an [input] list of [Word]s and sorts it to [accepted] and [rejected]
