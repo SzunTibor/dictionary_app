@@ -21,7 +21,6 @@ class ResultPage extends StatelessWidget {
                   return Column(
                     children: [
                       switch (state) {
-                        InitialResultState() => const SizedBox(),
                         WordsResultState() => Expanded(
                             child: WordListView(
                                 words: state.list, titleText: 'Total value:'),

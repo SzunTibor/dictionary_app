@@ -28,17 +28,17 @@ class _InputPageState extends State<InputPage> {
           BlocBuilder<InputBloc, InputState>(
             builder: (context, state) {
               return switch (state) {
-                InitialInputState() => const SizedBox.expand(),
                 WordsInputState() => Expanded(
-                      child: WordListView(
-                    words: state.words,
-                    titleText: 'Total new points:',
-                    controller: _scrollController,
-                    onDismissed: (DismissDirection direction, Word word) =>
-                        context
-                            .read<InputBloc>()
-                            .add(DeleteWordsEvent(words: [word])),
-                  )),
+                    child: WordListView(
+                      words: state.words,
+                      titleText: 'Total new points:',
+                      controller: _scrollController,
+                      onDismissed: (DismissDirection direction, Word word) =>
+                          context
+                              .read<InputBloc>()
+                              .add(DeleteWordsEvent(words: [word])),
+                    ),
+                  ),
               };
             },
           ),
@@ -63,9 +63,11 @@ class _InputPageState extends State<InputPage> {
                   context.read<InputBloc>().add(SubmitWordsEvent(text: value));
                   _editingController.text = '';
                   _editingFocus.requestFocus();
-                  _scrollController.animateTo(0,
-                      duration: const Duration(milliseconds: 100),
-                      curve: Curves.ease);
+                  if (_scrollController.hasClients) {
+                    _scrollController.animateTo(0,
+                        duration: const Duration(milliseconds: 100),
+                        curve: Curves.ease);
+                  }
                 },
               ),
             );

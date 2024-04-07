@@ -13,7 +13,7 @@ class ResultBloc extends Bloc<ResultEvent, ResultState> {
   DictionaryInfo get dictionaryInfo => _dservice.dictionaryInfo;
 
   ResultBloc(this._dservice, this._snackBarService)
-      : super(const InitialResultState()) {
+      : super(const WordsResultState(list: [])) {
     on<ResultEvent>((event, emit) => switch (event) {
           FilterByEvent() => _onFilterBy(event, emit),
         });
@@ -30,7 +30,7 @@ class ResultBloc extends Bloc<ResultEvent, ResultState> {
         case ResponseType.warning:
           emit(ErrorResultState(message: result.message, list: []));
           _snackBarService.showSnackBar(
-          ErrorSnackBarRequest('An error occured during filtering.'));
+              ErrorSnackBarRequest('An error occured during filtering.'));
           break;
         case ResponseType.success:
           emit(WordsResultState(list: result.value));

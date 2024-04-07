@@ -4,7 +4,7 @@ part of 'input_bloc.dart';
 sealed class InputEvent {}
 
 /// An event representing a submit event.
-/// 
+///
 /// It contains the [text] submitted to be evaluated by a dictionary.
 class SubmitWordsEvent implements InputEvent {
   final String text;
@@ -13,16 +13,26 @@ class SubmitWordsEvent implements InputEvent {
   const SubmitWordsEvent({required this.text});
 }
 
+/// An event representing a resolve pending words event.
+///
+/// It signals the bloc to resolve and clear out it's list of pending words.
+class ResolvePendingEvent implements InputEvent {
+  
+  /// Creates a new resolve pending event.
+  const ResolvePendingEvent();
+}
+
 /// An event representing a save event.
-/// 
+///
 /// It saves all accepted words to the dictionary.
 class SaveListEvent implements InputEvent {
+
   /// Creates a new save list event.
   const SaveListEvent();
 }
 
 /// An event representing a delete event.
-/// 
+///
 /// It contains the list of [words] to be deleted.
 class DeleteWordsEvent implements InputEvent {
   final List<Word> words;

@@ -8,6 +8,7 @@ part 'input_state.dart';
 
 class InputBloc extends Bloc<InputEvent, InputState> {
   List<Word> _list = [];
+  List<Word> _pendingList = [];
 
   final TextProcessor _textProcessor;
   final DictionaryService _dservice;
@@ -19,30 +20,27 @@ class InputBloc extends Bloc<InputEvent, InputState> {
     this._textProcessor,
     this._dservice,
     this._snackBarService,
-  ) : super(const InitialInputState()) {
+  ) : super(const WordsInputState(words: [])) {
     on<InputEvent>((event, emit) => switch (event) {
           SubmitWordsEvent() => _onSubmit(event, emit),
+          ResolvePendingEvent() => _onResolve(event, emit),
           SaveListEvent() => _onSave(event, emit),
           DeleteWordsEvent() => _onDelete(event, emit),
         });
-
-    emit(WordsInputState(words: _list));
   }
 
-  Future<void> _onSubmit(
-      SubmitWordsEvent event, Emitter<InputState> emit) async {
+  void _onSubmit(SubmitWordsEvent event, Emitter<InputState> emit) {
     // First we blindly add the words to the list as pending.
     // Then, once we have a response from the dictionary we
     // update accordingly.
-
-    final String listAsString = _list.asString();
 
     final Iterable<String> candidates = event.text
         .toLowerCase()
         .replaceAll(RegExp(r'[,\.]'), ' ')
         .split(RegExp(r'\s+'))
         .where((c) => c.isNotEmpty)
-        .where((c) => !listAsString.split(' ').contains(c))
+        .where((c) => !_list.asString().split(' ').contains(c))
+        .where((c) => !_pendingList.asString().split(' ').contains(c))
         .toSet();
 
     final List<Word> pendingList = [
@@ -52,7 +50,18 @@ class InputBloc extends Bloc<InputEvent, InputState> {
 
     if (pendingList.isEmpty) return;
 
-    emit(WordsInputState(words: [...pendingList, ..._list]));
+    _pendingList = [...pendingList, ..._pendingList];
+
+    emit(WordsInputState(words: [..._pendingList, ..._list]));
+
+    add(const ResolvePendingEvent());
+  }
+
+  Future<void> _onResolve(
+      ResolvePendingEvent event, Emitter<InputState> emit) async {
+    if (_pendingList.isEmpty) return;
+
+    final candidates = _pendingList.map((e) => e.text).toSet();
 
     try {
       final Response<List<Word>> response =
@@ -60,31 +69,33 @@ class InputBloc extends Bloc<InputEvent, InputState> {
 
       switch (response.type) {
         case ResponseType.error:
-          emit(ErrorInputState(words: _list, message: response.message));
+          emit(ErrorInputState(
+              words: [..._pendingList, ..._list], message: response.message));
           _snackBarService.showSnackBar(
               ErrorSnackBarRequest('An error occured during submit.'));
           break;
         case ResponseType.warning:
-          final resolvedList = [
+          _list = [
             ...response.value,
             ..._list,
           ];
-          _list = resolvedList;
+          _pendingList.clear();
           emit(WarningInputState(words: _list, message: response.message));
           _snackBarService.showSnackBar(WarningSnackBarRequest(
               'One or more words were rejected by the dictionary:\n${response.message}'));
           break;
         case ResponseType.success:
-          final resolvedList = [
+          _list = [
             ...response.value,
             ..._list,
           ];
-          _list = resolvedList;
+          _pendingList.clear();
           emit(WordsInputState(words: _list));
           break;
       }
     } catch (error) {
-      emit(ErrorInputState(words: _list, message: error.toString()));
+      emit(ErrorInputState(
+          words: [..._pendingList, ..._list], message: error.toString()));
       _snackBarService.showSnackBar(
           ErrorSnackBarRequest('An error occured during submit.'));
     }
@@ -94,50 +105,42 @@ class InputBloc extends Bloc<InputEvent, InputState> {
     if (_list.isEmpty) return;
 
     try {
-      // Don't send words not accepted, keeping pending ones in the list.
-      final List<Word> wordsPending = [];
-      final List<Word> wordsToSave = [];
-      for (var word in _list) {
-        if (word.state == WordState.pending) {
-          wordsPending.add(word);
-        } else if (word.state == WordState.accepted) {
-          wordsToSave.add(word);
-        }
-      }
+      final List<Word> wordsToSave = _list
+          .where((element) => element.state == WordState.accepted)
+          .toList();
 
       final response = await _dservice.saveWords(wordsToSave);
 
       switch (response.type) {
         case ResponseType.error:
-          emit(ErrorInputState(words: _list, message: response.message));
+          emit(ErrorInputState(
+              words: [..._pendingList, ..._list], message: response.message));
           _snackBarService.showSnackBar(ErrorSnackBarRequest(
               'An error occured durng save:\n${response.message}'));
           break;
         case ResponseType.warning:
-          _list
-            ..clear()
-            ..addAll(wordsPending);
-          emit(WarningInputState(words: _list, message: response.message));
+          _list.clear();
+          emit(WarningInputState(
+              words: [..._pendingList, ..._list], message: response.message));
           _snackBarService.showSnackBar(WarningSnackBarRequest(
               'One or more words were rejected by the dictionary:\n${response.message}'));
           break;
         case ResponseType.success:
-          _list
-            ..clear()
-            ..addAll(wordsPending);
-          emit(WordsInputState(words: _list));
+          _list.clear();
+          emit(WordsInputState(words: [..._pendingList, ..._list]));
           break;
       }
     } catch (error) {
-      emit(ErrorInputState(words: _list, message: error.toString()));
+      emit(ErrorInputState(
+          words: [..._pendingList, ..._list], message: error.toString()));
     }
   }
 
-  Future<void> _onDelete(
-      DeleteWordsEvent event, Emitter<InputState> emit) async {
+  void _onDelete(DeleteWordsEvent event, Emitter<InputState> emit) {
     for (var word in event.words) {
       _list.remove(word);
+      _pendingList.remove(word);
     }
-    emit(WordsInputState(words: _list));
+    emit(WordsInputState(words: [..._pendingList, ..._list]));
   }
 }

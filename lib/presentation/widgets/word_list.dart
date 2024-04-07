@@ -119,7 +119,7 @@ class WordListView extends StatelessWidget {
               ),
             );
 
-            if (onDismissed != null) {
+            if (onDismissed != null && !word.isPending) {
               child = Dismissible(
                 key: Key('${word.text}-${word.state}'),
                 onDismissed: (direction) => onDismissed!(direction, word),
