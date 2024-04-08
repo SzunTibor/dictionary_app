@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../domain/domain_api.dart';
@@ -39,7 +41,7 @@ class InputBloc extends Bloc<InputEvent, InputState> {
         .replaceAll(RegExp(r'[,\.]'), ' ')
         .split(RegExp(r'\s+'))
         .where((c) => c.isNotEmpty)
-        .where((c) => !_list.asString().split(' ').contains(c))
+        .where(_notInList)
         .where((c) => !_pendingList.asString().split(' ').contains(c))
         .toSet();
 
@@ -76,7 +78,7 @@ class InputBloc extends Bloc<InputEvent, InputState> {
           break;
         case ResponseType.warning:
           _list = [
-            ...response.value,
+            ...response.value.where((word) => _notInList(word.text)),
             ..._list,
           ];
           _pendingList.clear();
@@ -86,7 +88,7 @@ class InputBloc extends Bloc<InputEvent, InputState> {
           break;
         case ResponseType.success:
           _list = [
-            ...response.value,
+            ...response.value.where((word) => _notInList(word.text)),
             ..._list,
           ];
           _pendingList.clear();
@@ -143,4 +145,6 @@ class InputBloc extends Bloc<InputEvent, InputState> {
     }
     emit(WordsInputState(words: [..._pendingList, ..._list]));
   }
+
+  bool _notInList(String c) => !_list.asString().split(' ').contains(c);
 }

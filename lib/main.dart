@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 
 import 'presentation/DictionaryApp.dart';
 
-void main() {
-  initGetIt(di);
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  initGetIt(di);
+  await di.allReady();
   runApp(const DictionaryApp());
 }

@@ -1,3 +1,4 @@
+import 'package:dictionary_app_cont/data/word_evaluator/english_evaluator.dart';
 import 'package:dictionary_app_cont/di/di_app_module.dart';
 import 'package:dictionary_app_cont/domain/domain_api.dart';
 import 'package:dictionary_app_cont/presentation/input/bloc/input_bloc.dart';
@@ -16,13 +17,17 @@ GetIt initGetIt(GetIt getIt) => getIt
       getIt<DictionaryService>(), getIt<SnackBarService>()))
 
   // Services
-  ..registerFactory<TextProcessor>(() => DefaultTextProcessor(
-      dictionary: getIt<Dictionary>(), evaluator: getIt<WordEvaluator>()))
-  ..registerFactory<WordEvaluator>(() => SimpleWordEvaluator())
   ..registerFactory<DictionaryService>(
       () => DefaultDictionaryService(dictionary: getIt<Dictionary>()))
 
   // Repos
+  ..registerSingletonAsync<WordEvaluator>(() async {
+    final evaluator = EnglishEvaluator();
+    await evaluator.initialize(DIAppModule.wordListResolver, lazy: true);
+    return evaluator;
+  })
+  ..registerSingletonWithDependencies<TextProcessor>(() => DefaultTextProcessor(
+      dictionary: getIt<Dictionary>(), evaluator: getIt<WordEvaluator>()), dependsOn: [WordEvaluator])
   ..registerLazySingleton(
       () => Dictionary.english(getIt<WordStorage>(), maxWordLength: 45))
   ..registerFactory<WordStorage>(() => MapWordStorage())

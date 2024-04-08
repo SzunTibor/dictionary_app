@@ -57,7 +57,11 @@ class DefaultTextProcessor implements TextProcessor {
       if (state == WordState.pending) {
         try {
           value = await _evaluator.evaluate(candidate);
-          state = WordState.accepted;
+          if (value > 0) {
+            state = WordState.accepted;
+          } else {
+            state = WordState.rejected;
+          }
         } catch (error) {
           return Response.error(error.toString(), []);
         }

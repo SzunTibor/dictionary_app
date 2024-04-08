@@ -1,37 +1,55 @@
-// import 'dart:async';
+import 'dart:async';
 
-// import '../../domain/models/word.dart';
-// import '../word_storage/map_storage.dart';
-// import 'word_evaluator.dart';
+import '../../domain/models/word.dart';
+import '../word_storage/map_storage.dart';
+import 'word_evaluator.dart';
 
-// class EnglishEvaluator implements WordEvaluator {
-//   late final MapWordStorage _storage;
+/// A naive implementation of an evaluator that accepts words only listed in
+/// a word list provided by a [resourceResolver].
+class EnglishEvaluator implements WordEvaluator<FutureOr<String>> {
+  late final MapWordStorage _storage;
+  late final FutureOr<String> Function() _resolver;
 
-//   bool _initialized = false;
-//   bool get isInitialized => _initialized;
+  Completer<void>? _initialized;
 
-//   @override
-//   FutureOr<void> initialize() async {
-//     _storage = MapWordStorage();
+  /// [resourceResolver] needs to be a list of english words,
+  /// separated by whitespaces.
+  /// It is possible to make initialization lazy, that is, only actually do
+  /// it on the first [evaluate], by setting [lazy] to true.
+  @override
+  FutureOr<void> initialize(FutureOr<String> Function() resourceResolver,
+      {bool lazy = false}) async {
+    _storage = MapWordStorage();
+    _resolver = resourceResolver;
 
-//     for (var word in words) {
-//       _storage.save(
-//           Word(text: word, value: word.length, state: WordState.accepted));
-//     }
+    if (!lazy) await _initialize();
+  }
 
-//     _initialized = true;
-//   }
+  Future<void> _initialize() async {
+    if (_initialized != null) return _initialized!.future;
 
-//   @override
-//   FutureOr<int> evaluate(String word) async {
-//     assert(isInitialized, 'Evaluator must be initialized first.');
+    _initialized = Completer<void>();
 
-//     final Word? found = await _storage.lookup(word);
+    final words = (await _resolver()).split(RegExp(r'\s+'));
 
-//     if (found == null) {
-//       return 0;
-//     } else {
-//       return found.value;
-//     }
-//   }
-// }
+    for (var word in words) {
+      _storage.save(
+          Word(text: word, value: word.length, state: WordState.accepted));
+    }
+
+    _initialized!.complete();
+  }
+
+  @override
+  FutureOr<int> evaluate(String word) async {
+    await _initialize();
+
+    final Word? found = await _storage.lookup(word);
+
+    if (found == null) {
+      return 0;
+    } else {
+      return found.value;
+    }
+  }
+}
