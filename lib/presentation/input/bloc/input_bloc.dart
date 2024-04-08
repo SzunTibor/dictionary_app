@@ -11,6 +11,7 @@ part 'input_state.dart';
 class InputBloc extends Bloc<InputEvent, InputState> {
   List<Word> _list = [];
   List<Word> _pendingList = [];
+  Completer<void>? _isResolving;
 
   final TextProcessor _textProcessor;
   final DictionaryService _dservice;
@@ -29,6 +30,15 @@ class InputBloc extends Bloc<InputEvent, InputState> {
           SaveListEvent() => _onSave(event, emit),
           DeleteWordsEvent() => _onDelete(event, emit),
         });
+  }
+
+  @override
+  void onEvent(InputEvent event) {
+    super.onEvent(event);
+
+    if (event is SubmitWordsEvent && _isResolving != null) {
+      _isResolving!.future.then((_) => add(event));
+    }
   }
 
   void _onSubmit(SubmitWordsEvent event, Emitter<InputState> emit) {
@@ -56,12 +66,19 @@ class InputBloc extends Bloc<InputEvent, InputState> {
 
     emit(WordsInputState(words: [..._pendingList, ..._list]));
 
-    add(const ResolvePendingEvent());
+    if (_isResolving == null) {
+      add(const ResolvePendingEvent());
+    }
   }
 
   Future<void> _onResolve(
       ResolvePendingEvent event, Emitter<InputState> emit) async {
-    if (_pendingList.isEmpty) return;
+    if (_pendingList.isEmpty) {
+      _resolveDone();
+      return;
+    }
+
+    _isResolving = Completer();
 
     final candidates = _pendingList.map((e) => e.text).toSet();
 
@@ -101,6 +118,8 @@ class InputBloc extends Bloc<InputEvent, InputState> {
       _snackBarService.showSnackBar(
           ErrorSnackBarRequest('An error occured during submit.'));
     }
+
+    _resolveDone();
   }
 
   Future<void> _onSave(SaveListEvent event, Emitter<InputState> emit) async {
@@ -147,4 +166,11 @@ class InputBloc extends Bloc<InputEvent, InputState> {
   }
 
   bool _notInList(String c) => !_list.asString().split(' ').contains(c);
+
+  void _resolveDone() {
+    if (_isResolving != null) {
+      _isResolving!.complete();
+      _isResolving = null;
+    }
+  }
 }
